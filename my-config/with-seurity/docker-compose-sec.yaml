@@ -1,0 +1,197 @@
+version: '3.9'
+
+services:
+## Router
+  router01:
+    image: mongo
+    container_name: router-01
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: kamal
+      MONGO_INITDB_ROOT_PASSWORD: pa3word!123
+      MONGO_INITDB_DATABASE: admin
+
+    command: mongos --keyFile /data/key.key --port 27017 --configdb rs-config-server/configsvr01:27017 --bind_ip_all
+    ports:
+      - 27117:27017
+    restart: always
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_router01_db:/data/db
+      - mongodb_cluster_router01_config:/data/configdb
+      - ./cert/key.key:/data/key.key
+
+## Config Servers
+  configsvr01:
+    image: mongo
+    container_name: mongo-config-01
+
+    command: mongod --keyFile /data/key.key --auth --port 27017 --configsvr --replSet rs-config-server
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_configsvr01_db:/data/db
+      - mongodb_cluster_configsvr01_config:/data/configdb
+      - ./cert/key.key:/data/key.key
+
+    ports:
+      - 27120:27017
+    restart: always
+
+## Shards
+  ## Shards 01
+  shard01-a:
+    image: mongo
+    container_name: shard-01-node-a
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard01_a_db:/data/db
+      - mongodb_cluster_shard01_a_config:/data/configdb
+      - ./cert/key.key:/data/key.key
+
+    command: mongod --keyFile /data/key.key --auth --port 27017 --shardsvr --replSet rs-shard-01
+    ports:
+      - 27122:27017
+    restart: always
+    links:
+      - shard01-b
+  shard01-b:
+    image: mongo
+    container_name: shard-01-node-b
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard01_b_db:/data/db
+      - mongodb_cluster_shard01_b_config:/data/configdb
+      - ./cert/key.key:/data/key.key
+
+    command: mongod --keyFile /data/key.key --auth --port 27017 --shardsvr --replSet rs-shard-01
+    ports:
+      - 27123:27017
+    restart: always
+
+  ## Shards 02
+  shard02-a:
+    image: mongo
+    container_name: shard-02-node-a
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard02_a_db:/data/db
+      - mongodb_cluster_shard02_a_config:/data/configdb
+      - ./cert/key.key:/data/key.key
+
+    command: mongod --keyFile /data/key.key --auth --port 27017 --shardsvr --replSet rs-shard-02
+
+    ports:
+      - 27125:27017
+    restart: always
+    links:
+      - shard02-b
+  shard02-b:
+    image: mongo
+    container_name: shard-02-node-b
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard02_b_db:/data/db
+      - mongodb_cluster_shard02_b_config:/data/configdb
+      - ./cert/key.key:/data/key.key
+    command: mongod --keyFile /data/key.key --auth --port 27017 --shardsvr --replSet rs-shard-02
+
+    ports:
+      - 27126:27017
+    restart: always
+
+volumes:
+  mongodb_cluster_router01_db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_router01_db
+  mongodb_cluster_router01_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_router01_config
+    
+  mongodb_cluster_configsvr01_db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_configsvr01_db
+
+  mongodb_cluster_configsvr01_db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_configsvr01_db
+
+  mongodb_cluster_configsvr01_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_configsvr01_config
+
+  mongodb_cluster_configsvr01_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_configsvr01_config
+
+  mongodb_cluster_shard01_a_db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_shard01_a_db
+
+  mongodb_cluster_shard01_a_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_shard01_a_config
+
+  mongodb_cluster_shard01_b_db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_shard01_b_db
+
+  mongodb_cluster_shard01_b_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_shard01_b_config
+
+  mongodb_cluster_shard02_a_db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_shard02_a_db
+
+  mongodb_cluster_shard02_a_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_shard02_a_config
+
+  mongodb_cluster_shard02_b_db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_shard02_b_db
+
+  mongodb_cluster_shard02_b_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /server/mongo/mongodb_cluster_shard02_b_config
