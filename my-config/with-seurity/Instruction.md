@@ -18,6 +18,7 @@ or
 docker exec -it mongo_configsvr01 sh -c "mongosh < /scripts/init-configserver.js"
 docker exec -it mongo_shard01-a sh -c "mongosh < /scripts/init-shard01.js"
 docker exec -it mongo_shard02-a sh -c "mongosh < /scripts/init-shard02.js"
+docker exec -it mongo_shard03-a sh -c "mongosh < /scripts/init-shard03.js"
 ```
 ### 👉 Step 3: Initializing the router
 Note: Wait 5 second
